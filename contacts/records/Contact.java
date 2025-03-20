@@ -1,25 +1,38 @@
-package contacts;
+package contacts.records;
 
+import java.time.LocalDateTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AContact {
-    String name;
-    String surname;
+public abstract class Contact {
+    Type type;
     String phone;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 
-    private AContact(String name, String surname, String phone) {
-        this.name = name;
-        this.surname = surname;
+    protected Contact(Type type, String phone) {
+        this.type = type;
         this.phone = phone;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = this.createdAt;
     }
 
-    public String getName() {
-        return this.name;
+    public enum Type {
+        PERSON,
+        ORGANISATION
     }
 
-    public String getSurname() {
-        return this.surname;
+    public abstract static class Builder {
+        protected String phone;
+
+        public void addPhone(String phone) {
+            if (Contact.validatePhone(phone)) {
+                System.out.println("Wrong number format!");
+                this.phone = null;
+            } else {
+                this.phone = phone;
+            }
+        }
     }
 
     public String getPhone() {
@@ -29,46 +42,24 @@ public class AContact {
         return this.phone;
     }
 
-    public void updateField(String field, String value) {
-        switch (field) {
-            case "name" -> this.name = value;
-            case "surname" -> this.surname = value;
-            case "number" -> {
-                if (validatePhone(value)) {
-                    this.phone = value;
-                }
-            }
-        }
+    public final void update(String field, String value) {
+        this.updateField(field, value);
+        this.updatedAt = LocalDateTime.now();
     }
 
-    static class Builder {
-        String name;
-        String surname;
-        String phone;
+    protected abstract void updateField(String field, String value);
 
-        public void addName(String name) {
-            this.name = name;
-        }
+    public abstract void print();
 
-        public void addSurname(String surname) {
-            this.surname = surname;
-        }
-
-        public void addPhone(String phone) {
-            if (AContact.validatePhone(phone)) {
-                System.out.println("Wrong number format!");
-                this.phone = null;
-            } else {
-                this.phone = phone;
-            }
-        }
-
-        public AContact build() {
-            return new AContact(name, surname, phone);
-        }
+    public final void printFull() {
+        this.printDetails();
+        System.out.printf("Time created: %s%n", this.createdAt);
+        System.out.printf("Time last edit: %s%n", this.updatedAt);
     }
 
-    private static boolean validatePhone(String phone) {
+    protected abstract void printDetails();
+
+    static boolean validatePhone(String phone) {
         /*
             1. The phone number should be split into groups using a space or dash. One group is also possible.
             2. Before the first group, there may or may not be a plus symbol.

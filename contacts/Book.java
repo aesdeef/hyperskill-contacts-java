@@ -1,11 +1,13 @@
 package contacts;
 
+import contacts.records.Contact;
+
 import java.util.*;
 
 public class Book {
-    private final List<AContact> contacts = new ArrayList<>();
+    private final List<Contact> contacts = new ArrayList<>();
 
-    public void addContact(AContact contact) {
+    public void addContact(Contact contact) {
         this.contacts.add(contact);
     }
 
@@ -22,20 +24,20 @@ public class Book {
     }
 
     public void updateContact(int contactId, String field, String value) {
-        AContact contact = this.contacts.get(contactId - 1);
-        contact.updateField(field, value);
+        Contact contact = this.contacts.get(contactId - 1);
+        contact.update(field, value);
     }
 
     public void printContacts() {
         for (int i = 0; i < this.contacts.size(); i++) {
-            AContact contact = this.contacts.get(i);
-            System.out.printf(
-                    "%d. %s %s, %s",
-                    i + 1,
-                    contact.getName(),
-                    contact.getSurname(),
-                    contact.getPhone()
-            );
+            Contact contact = this.contacts.get(i);
+            System.out.printf("%d. ", i + 1);
+            contact.print();
         }
+    }
+
+    public void printContact(int contactId) {
+        Contact contact = this.contacts.get(contactId - 1);
+        contact.printFull();
     }
 }

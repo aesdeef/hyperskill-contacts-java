@@ -1,5 +1,8 @@
 package contacts;
 
+import contacts.records.Organisation;
+import contacts.records.Person;
+
 import java.util.Scanner;
 
 public class App {
@@ -7,29 +10,58 @@ public class App {
     private final Book book = new Book();
 
     public void menu() {
-        System.out.print("Enter action (add, remove, edit, count, list, exit): ");
+        System.out.print("Enter action (add, remove, edit, count, info, exit): ");
         String action = scanner.nextLine();
         switch (action) {
             case "add" -> this.add();
             case "remove" -> this.remove();
             case "edit" -> this.edit();
             case "count" -> this.count();
-            case "list" -> this.list();
+            case "info" -> this.info();
             case "exit" -> this.exit();
         }
+        System.out.println();
+    }
+
+    private String prompt(String prompt) {
+        System.out.print(prompt);
+        return scanner.nextLine();
     }
 
     private void add() {
-        final AContact.Builder builder = new AContact.Builder();
-        System.out.print("Enter the name: ");
-        builder.addName(scanner.nextLine());
-        System.out.print("Enter the surname: ");
-        builder.addSurname(scanner.nextLine());
-        System.out.print("Enter the number: ");
-        builder.addPhone(scanner.nextLine());
-
-        this.book.addContact(builder.build());
+        String type = prompt("Enter the type (person, organization): ");
+        switch(type) {
+            case "person" -> addPerson();
+            case "organisation", "organization" -> addOrganisation();
+            default -> {return;}
+        }
         System.out.println("The record added."); // TODO: Correct grammar after grading
+    }
+
+    private void addPerson() {
+        final Person.Builder builder = new Person.Builder();
+        String firstName = prompt("Enter the name: ");
+        builder.addFirstName(firstName);
+        String surname = prompt("Enter the surname: ");
+        builder.addSurname(surname);
+        String phone = prompt("Enter the number: ");
+        builder.addPhone(phone);
+        String dateOfBirth = prompt("Enter the birth date: ");
+        builder.addDateOfBirth(dateOfBirth);
+        String gender = prompt("Enter the gender: ");
+        builder.addGender(gender);
+        this.book.addContact(builder.build());
+    }
+
+    private void addOrganisation() {
+        final Organisation.Builder builder = new Organisation.Builder();
+        String name = prompt("Enter the organization name: ");
+        builder.addName(name);
+        String address = prompt("Enter the address: ");
+        builder.addAddress(address);
+        String phone = prompt("Enter the number: ");
+        builder.addPhone(phone);
+        this.book.addContact(builder.build());
     }
 
     private void remove() {
@@ -38,8 +70,8 @@ public class App {
             return;
         }
         this.book.printContacts();
-        System.out.print("Select a record: ");
-        int recordId = Integer.parseInt(scanner.nextLine());
+        String selection = prompt("Select a record: ");
+        int recordId = Integer.parseInt(selection);
 
         this.book.removeContact(recordId);
         System.out.println("The record removed!");
@@ -52,12 +84,10 @@ public class App {
         }
         this.book.printContacts();
         this.book.printContacts();
-        System.out.print("Select a record: ");
-        int recordId = Integer.parseInt(scanner.nextLine());
-        System.out.println("Select a field (name, surname, number): ");
-        String field = scanner.nextLine();
-        System.out.printf("Enter %s: ", field);
-        String value = scanner.nextLine();
+        String id = prompt("Select a record: ");
+        int recordId = Integer.parseInt(id);
+        String field = prompt("Select a field (name, surname, number): ");
+        String value = prompt("Enter %s: ".formatted(field));
 
         this.book.updateContact(recordId, field, value);
         System.out.println("The record updated!");
@@ -67,8 +97,11 @@ public class App {
         System.out.println("The Phone Book has " + this.book.getCount() + " records.");
     }
 
-    private void list() {
+    private void info() {
         this.book.printContacts();
+        String selection = prompt("Select a record: ");
+        int recordId = Integer.parseInt(selection);
+        this.book.printContact(recordId);
     }
 
     private void exit() {

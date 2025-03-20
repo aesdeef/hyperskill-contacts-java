@@ -42,6 +42,8 @@ public abstract class Contact {
         return this.phone;
     }
 
+    public abstract boolean matches(Pattern pattern);
+
     public final void update(String field, String value) {
         this.updateField(field, value);
         this.updatedAt = LocalDateTime.now();

@@ -1,26 +1,36 @@
 package contacts;
 
+import contacts.records.Contact;
 import contacts.records.Organisation;
 import contacts.records.Person;
 
+import java.io.*;
+import java.util.List;
 import java.util.Scanner;
 
 public class App {
+    private final String filename;
     private final Scanner scanner = new Scanner(System.in);
-    private final Book book = new Book();
+    private Book book = new Book();
 
-    public void menu() {
-        System.out.print("Enter action (add, remove, edit, count, info, exit): ");
+    public App(String filename) throws IOException, ClassNotFoundException {
+        if (filename != null) {
+            this.deserializeBook();
+        }
+        this.filename = filename;
+    }
+
+    public void menu() throws IOException {
+        System.out.println();
+        System.out.print("[menu] Enter action (add, list, search, count, exit): ");
         String action = scanner.nextLine();
         switch (action) {
             case "add" -> this.add();
-            case "remove" -> this.remove();
-            case "edit" -> this.edit();
+            case "list" -> this.list();
+            case "search" -> this.search();
             case "count" -> this.count();
-            case "info" -> this.info();
             case "exit" -> this.exit();
         }
-        System.out.println();
     }
 
     private String prompt(String prompt) {
@@ -30,12 +40,14 @@ public class App {
 
     private void add() {
         String type = prompt("Enter the type (person, organization): ");
-        switch(type) {
+        switch (type) {
             case "person" -> addPerson();
             case "organisation", "organization" -> addOrganisation();
-            default -> {return;}
+            default -> {
+                return;
+            }
         }
-        System.out.println("The record added."); // TODO: Correct grammar after grading
+        System.out.println("Record added.");
     }
 
     private void addPerson() {
@@ -64,47 +76,105 @@ public class App {
         this.book.addContact(builder.build());
     }
 
-    private void remove() {
-        if (this.book.isEmpty()) {
-            System.out.println("No records to remove!");
+    private void list() {
+        this.book.printContacts();
+        System.out.println();
+        String choice = prompt("[list] Enter action ([number], back): ");
+        if ("back".equals(choice)) {
             return;
         }
-        this.book.printContacts();
-        String selection = prompt("Select a record: ");
-        int recordId = Integer.parseInt(selection);
+        int recordId = Integer.parseInt(choice);
+        this.record(recordId);
+    }
 
-        this.book.removeContact(recordId);
+    private void record(int recordId) {
+        Contact contact = book.getContact(recordId);
+        contact.printFull();
+        System.out.println();
+        String action = prompt("[record] Enter action (edit, delete, menu): ");
+        System.out.println();
+        switch (action) {
+            case "edit" -> this.edit(contact);
+            case "delete" -> this.delete(contact);
+            case "menu" -> { /* do nothing */ }
+        }
+    }
+
+    private void search() {
+        String query;
+        String action;
+        while (true) {
+            query = prompt("Enter search query: ");
+            List<Contact> results = this.book.query(query);
+            for (int i = 0; i < results.size(); i++) {
+                System.out.printf("%d. ", i + 1);
+                results.get(i).print();
+                System.out.println();
+            }
+            System.out.println();
+
+            action = prompt("[search] Enter action ([number], back, again): ");
+            switch (action) {
+                case "back" -> {
+                    return;
+                }
+                case "again" -> {
+                    continue;
+                }
+            }
+            int recordId = Integer.parseInt(action);
+            this.record(recordId);
+            return;
+        }
+    }
+
+    private void delete(Contact contact) {
+        this.book.removeContact(contact);
         System.out.println("The record removed!");
     }
 
-    private void edit() {
-        if (this.book.isEmpty()) {
-            System.out.println("No records to edit!");
-            return;
-        }
-        this.book.printContacts();
-        this.book.printContacts();
-        String id = prompt("Select a record: ");
-        int recordId = Integer.parseInt(id);
+    private void edit(Contact contact) {
         String field = prompt("Select a field (name, surname, number): ");
         String value = prompt("Enter %s: ".formatted(field));
 
-        this.book.updateContact(recordId, field, value);
-        System.out.println("The record updated!");
+        contact.update(field, value);
+        System.out.println("Saved");
+        contact.printFull();
     }
 
     private void count() {
         System.out.println("The Phone Book has " + this.book.getCount() + " records.");
     }
 
-    private void info() {
-        this.book.printContacts();
-        String selection = prompt("Select a record: ");
-        int recordId = Integer.parseInt(selection);
-        this.book.printContact(recordId);
+    private void exit() throws IOException {
+        if (filename != null) {
+            this.serializeBook();
+        }
+        System.exit(0);
     }
 
-    private void exit() {
-        System.exit(0);
+    public void serializeBook() throws IOException {
+        File file = new File(filename);
+        if (!file.exists()) {
+            //noinspection ResultOfMethodCallIgnored
+            file.createNewFile();
+        }
+        FileOutputStream fos = new FileOutputStream(file);
+        BufferedOutputStream bos = new BufferedOutputStream(fos);
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.writeObject(book);
+        oos.close();
+    }
+
+    public void deserializeBook() throws IOException, ClassNotFoundException {
+        if (filename == null) {
+            this.book = new Book();
+            return;
+        }
+        FileInputStream fis = new FileInputStream(filename);
+        BufferedInputStream bis = new BufferedInputStream(fis);
+        ObjectInputStream ois = new ObjectInputStream(bis);
+        this.book = (Book) ois.readObject();
+        ois.close();
     }
 }

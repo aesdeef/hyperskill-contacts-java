@@ -1,5 +1,7 @@
 package contacts.records;
 
+import java.util.regex.Pattern;
+
 public class Organisation extends Contact {
     String name;
     String address;
@@ -8,14 +10,6 @@ public class Organisation extends Contact {
         super(Type.ORGANISATION, phone);
         this.name = name;
         this.address = address;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public String getAddress() {
-        return this.address;
     }
 
     public static class Builder extends Contact.Builder {
@@ -36,11 +30,19 @@ public class Organisation extends Contact {
     }
 
     @Override
+    public boolean matches(Pattern pattern) {
+        return pattern.matcher(this.name).matches();
+    }
+
+    @Override
     protected void updateField(String field, String value) {
         switch (field) {
-            case "name": this.name = value;
-            case "address": this.address = value;
-            case "phone": this.phone = value;
+            case "name":
+                this.name = value;
+            case "address":
+                this.address = value;
+            case "phone":
+                this.phone = value;
         }
     }
 

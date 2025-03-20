@@ -2,6 +2,7 @@ package contacts.records;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.regex.Pattern;
 
 public class Person extends Contact {
     String firstName;
@@ -71,8 +72,6 @@ public class Person extends Contact {
 
         public void addGender(char gender) {
             if (gender == ' ') {
-                // TODO: remove this after grading
-                System.out.println("Bad gender!");
                 return;
             }
             this.gender = gender;
@@ -81,6 +80,11 @@ public class Person extends Contact {
         public Person build() {
             return new Person(firstName, surname, phone, dateOfBirth, gender);
         }
+    }
+
+    @Override
+    public boolean matches(Pattern pattern) {
+        return pattern.matcher("%s %s".formatted(this.firstName, this.surname)).matches();
     }
 
     @Override
